@@ -12,7 +12,4 @@ public interface AbstractSignEditScreenAccessor {
 
     @Accessor("front")
     boolean isFront();
-
-    @Accessor("messages")
-    String[] getMessages();
 }

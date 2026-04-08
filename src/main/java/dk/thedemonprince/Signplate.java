@@ -7,6 +7,6 @@ public class Signplate implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ConfigManager.getInstance().load();
+        // Config is loaded on first getInstance() call
     }
 }

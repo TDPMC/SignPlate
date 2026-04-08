@@ -2,6 +2,7 @@ package dk.thedemonprince.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +37,32 @@ public class ConfigManager {
     }
 
     public void load() {
+        LOGGER.info("Loading SignPlate config from: {}", configFile.getAbsolutePath());
         if (configFile.exists()) {
             try (FileReader reader = new FileReader(configFile)) {
                 configData = gson.fromJson(reader, ConfigData.class);
-            } catch (IOException e) {
-                LOGGER.error("Failed to load config", e);
+                if (configData == null) {
+                    configData = new ConfigData();
+                    LOGGER.warn("Config file was empty, created new default.");
+                } else {
+                    if (configData.signTemplates == null) {
+                        LOGGER.warn("signTemplates list was null after loading, initializing...");
+                        try {
+                            java.lang.reflect.Field field = ConfigData.class.getDeclaredField("signTemplates");
+                            field.setAccessible(true);
+                            field.set(configData, new ArrayList<>());
+                        } catch (Exception e) {
+                            LOGGER.error("Failed to force initialize templates list", e);
+                        }
+                    }
+                    LOGGER.info("Successfully loaded {} templates.", configData.signTemplates.size());
+                }
+            } catch (IOException | JsonSyntaxException e) {
+                LOGGER.error("Failed to load config, creating default", e);
                 configData = new ConfigData();
             }
         } else {
+            LOGGER.info("No config file found, creating new.");
             configData = new ConfigData();
             save();
         }
@@ -52,12 +71,14 @@ public class ConfigManager {
     public synchronized void save() {
         try (FileWriter writer = new FileWriter(configFile)) {
             gson.toJson(configData, writer);
+            LOGGER.info("Saved SignPlate config with {} templates.", configData.signTemplates.size());
         } catch (IOException e) {
             LOGGER.error("Failed to save config", e);
         }
     }
 
     public ConfigData getConfig() {
+        if (configData == null) load();
         return configData;
     }
 

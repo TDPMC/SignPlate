@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -34,29 +35,37 @@ public class SignPlateScreen extends Screen {
     protected void init() {
         int centerX = width / 2;
         int centerY = height / 2;
-        ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
 
-        addDrawableChild(ButtonWidget.builder(Text.literal("SignPlate: " + (config.signPlateEnabled ? "§aON" : "§cOFF")), button -> {
+        ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
+        Text enabledText = Text.literal("SignPlate: ").append(Text.literal(config.signPlateEnabled ? "ON" : "OFF").formatted(config.signPlateEnabled ? Formatting.GREEN : Formatting.RED));
+        
+        addDrawableChild(ButtonWidget.builder(enabledText, button -> {
             config.signPlateEnabled = !config.signPlateEnabled;
             ConfigManager.getInstance().save();
             refresh();
         }).dimensions(centerX - 100, 10, 200, 20).build());
 
         if (editingTemplate == null) {
-            // List View
-            templateList = new TemplateListWidget(client, width, height - 120, 40, 25);
-            addSelectableChild(templateList);
+            // List View - Dimensions: width, height, y, itemHeight
+            // y=40 starts below the ON/OFF button
+            // height: available space for the list widget itself
+            int listY = 40;
+            int listHeight = height - 120; // leaves space for buttons at the bottom
+            
+            templateList = new TemplateListWidget(this.client, width, listHeight, listY, 25);
+            addDrawableChild(templateList);
 
             addDrawableChild(ButtonWidget.builder(Text.literal("Create New Template"), button -> {
                 editingTemplate = new ConfigManager.SignTemplate("New Template", "", "", "", "");
                 editingIndex = -1;
                 refresh();
-            }).dimensions(centerX - 100, height - 65, 200, 20).build());
+            }).dimensions(centerX - 100, height - 70, 200, 20).build());
 
             addDrawableChild(ButtonWidget.builder(Text.literal("Close"), button -> {
-                if (client != null) client.setScreen(parent);
-            }).dimensions(centerX - 100, height - 40, 200, 20).build());
+                if (this.client != null) this.client.setScreen(parent);
+            }).dimensions(centerX - 100, height - 45, 200, 20).build());
         } else {
+            templateList = null;
             // Editor View Centered
             int startY = centerY - 90;
             nameField = new TextFieldWidget(textRenderer, centerX - 100, startY, 200, 20, Text.literal("Template Name"));
@@ -111,34 +120,27 @@ public class SignPlateScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        context.fill(0, 0, width, height, 0xAA000000);
-    }
-
-    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
-        if (editingTemplate == null) {
-            templateList.render(context, mouseX, mouseY, delta);
-        } else {
+        if (editingTemplate != null) {
             int centerX = width / 2;
             int centerY = height / 2;
             int startY = centerY - 90;
             int linesY = startY + 45;
             
-            context.drawTextWithShadow(textRenderer, "Template Name:", centerX - 100, startY - 12, 0xAAAAAA);
-            context.drawTextWithShadow(textRenderer, "Lines (1-4):", centerX - 100, linesY - 12, 0xAAAAAA);
-            nameField.render(context, mouseX, mouseY, delta);
-            line1.render(context, mouseX, mouseY, delta);
-            line2.render(context, mouseX, mouseY, delta);
-            line3.render(context, mouseX, mouseY, delta);
-            line4.render(context, mouseX, mouseY, delta);
+            context.drawTextWithShadow(textRenderer, Text.literal("Template Name:"), centerX - 100, startY - 12, 0xAAAAAA);
+            context.drawTextWithShadow(textRenderer, Text.literal("Lines (1-4):"), centerX - 100, linesY - 12, 0xAAAAAA);
         }
     }
 
+    @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        this.renderInGameBackground(context);
+    }
+
     class TemplateListWidget extends ElementListWidget<TemplateEntry> {
-        public TemplateListWidget(MinecraftClient client, int width, int height, int top, int itemHeight) {
-            super(client, width, height, top, itemHeight);
+        public TemplateListWidget(MinecraftClient client, int width, int height, int y, int itemHeight) {
+            super(client, width, height, y, itemHeight);
             ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
             for (int i = 0; i < config.signTemplates.size(); i++) {
                 addEntry(new TemplateEntry(i, config.signTemplates.get(i)));
@@ -147,33 +149,37 @@ public class SignPlateScreen extends Screen {
 
         @Override
         public int getRowWidth() { return 300; }
+        
+        @Override
+        protected int getScrollbarX() { return width / 2 + 155; }
     }
 
     class TemplateEntry extends ElementListWidget.Entry<TemplateEntry> {
         private final int index;
         private final ConfigManager.SignTemplate template;
-        private final List<net.minecraft.client.gui.Element> children = new ArrayList<>();
+        private final List<ClickableWidget> buttons = new ArrayList<>();
 
         public TemplateEntry(int index, ConfigManager.SignTemplate template) {
             this.index = index;
             this.template = template;
             
-            children.add(ButtonWidget.builder(Text.literal("Select"), button -> {
+            buttons.add(ButtonWidget.builder(Text.literal("Select"), button -> {
                 ConfigManager.getInstance().getConfig().selectedSignTemplate = index;
                 ConfigManager.getInstance().save();
                 refresh();
             }).dimensions(0, 0, 50, 20).build());
 
-            children.add(ButtonWidget.builder(Text.literal("Edit"), button -> {
+            buttons.add(ButtonWidget.builder(Text.literal("Edit"), button -> {
                 editingTemplate = template;
                 editingIndex = index;
                 refresh();
             }).dimensions(0, 0, 40, 20).build());
 
-            children.add(ButtonWidget.builder(Text.literal("X").formatted(Formatting.RED), button -> {
-                ConfigManager.getInstance().getConfig().signTemplates.remove(index);
-                if (ConfigManager.getInstance().getConfig().selectedSignTemplate >= ConfigManager.getInstance().getConfig().signTemplates.size()) {
-                    ConfigManager.getInstance().getConfig().selectedSignTemplate = ConfigManager.getInstance().getConfig().signTemplates.size() - 1;
+            buttons.add(ButtonWidget.builder(Text.literal("X").formatted(Formatting.RED), button -> {
+                ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
+                config.signTemplates.remove(index);
+                if (config.selectedSignTemplate >= config.signTemplates.size()) {
+                    config.selectedSignTemplate = config.signTemplates.size() - 1;
                 }
                 ConfigManager.getInstance().save();
                 refresh();
@@ -185,33 +191,26 @@ public class SignPlateScreen extends Screen {
             ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
             boolean isSelected = config.selectedSignTemplate == this.index;
             
-            String label = (isSelected ? "§a● §f" : "§7○ §f") + template.name;
-            context.drawTextWithShadow(textRenderer, label, x + 5, y + 5, 0xFFFFFF);
+            context.drawTextWithShadow(textRenderer, (isSelected ? "● " : "○ ") + template.name, x + 5, y + 5, isSelected ? 0x55FF55 : 0xAAAAAA);
 
             int btnX = x + entryWidth - 120;
-            ButtonWidget selBtn = (ButtonWidget)children.getFirst();
-            selBtn.setX(btnX);
-            selBtn.setY(y);
-            selBtn.active = !isSelected;
-            selBtn.render(context, mouseX, mouseY, tickDelta);
-
-            ButtonWidget edBtn = (ButtonWidget)children.get(1);
-            edBtn.setX(btnX + 55);
-            edBtn.setY(y);
-            edBtn.render(context, mouseX, mouseY, tickDelta);
-
-            ButtonWidget delBtn = (ButtonWidget)children.get(2);
-            delBtn.setX(btnX + 100);
-            delBtn.setY(y);
-            delBtn.render(context, mouseX, mouseY, tickDelta);
+            for (int i = 0; i < buttons.size(); i++) {
+                ClickableWidget btn = buttons.get(i);
+                btn.setX(btnX + (i == 0 ? 0 : (i == 1 ? 55 : 100)));
+                btn.setY(y);
+                if (i == 0) btn.active = !isSelected;
+                btn.render(context, mouseX, mouseY, tickDelta);
+            }
         }
 
         @Override
-        public List<? extends net.minecraft.client.gui.Element> children() { return children; }
+        public List<? extends net.minecraft.client.gui.Element> children() {
+            return this.buttons;
+        }
 
         @Override
         public List<? extends net.minecraft.client.gui.Selectable> selectableChildren() {
-            return children.stream().map(e -> (net.minecraft.client.gui.Selectable)e).toList();
+            return this.buttons;
         }
     }
 }

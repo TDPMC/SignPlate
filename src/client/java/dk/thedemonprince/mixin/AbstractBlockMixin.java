@@ -5,6 +5,7 @@ import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.HangingSignItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SignItem;
 import net.minecraft.util.ActionResult;
@@ -24,10 +25,9 @@ public abstract class AbstractBlockMixin {
     
     @Inject(method = "onUseWithItem", at = @At("HEAD"), cancellable = true)
     private void onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ItemActionResult> cir) {
-        if (world.isClient && SignManager.getInstance().isSignPlateEnabled() && SignManager.getInstance().getSelectedTemplate() != null) {
-            if (isSign(stack)) {
-                // Return PASS_TO_DEFAULT_BLOCK_INTERACTION to skip specialized item-on-block logic
-                // and fall through to onUse.
+        if (world.isClient && isSign(stack)) {
+            SignManager manager = SignManager.getInstance();
+            if (manager.isSignPlateEnabled() && manager.getSelectedTemplate() != null) {
                 cir.setReturnValue(ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION);
             }
         }
@@ -35,20 +35,20 @@ public abstract class AbstractBlockMixin {
 
     @Inject(method = "onUse", at = @At("HEAD"), cancellable = true)
     private void onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
-        if (world.isClient && SignManager.getInstance().isSignPlateEnabled() && SignManager.getInstance().getSelectedTemplate() != null) {
-            ItemStack main = player.getMainHandStack();
-            ItemStack off = player.getOffHandStack();
-            
-            if (isSign(main) || isSign(off)) {
-                // Return PASS to skip block interaction (like opening a chest)
-                // This makes the game try to use the item instead (placing the sign).
-                cir.setReturnValue(ActionResult.PASS);
+        if (world.isClient) {
+            SignManager manager = SignManager.getInstance();
+            if (manager.isSignPlateEnabled() && manager.getSelectedTemplate() != null) {
+                if (isSign(player.getMainHandStack()) || isSign(player.getOffHandStack())) {
+                    cir.setReturnValue(ActionResult.PASS);
+                }
             }
         }
     }
 
     @Unique
     private boolean isSign(ItemStack stack) {
-        return stack != null && (stack.getItem() instanceof SignItem || stack.getItem() instanceof HangingSignItem);
+        if (stack == null || stack.isEmpty()) return false;
+        Item item = stack.getItem();
+        return item instanceof SignItem || item instanceof HangingSignItem;
     }
 }

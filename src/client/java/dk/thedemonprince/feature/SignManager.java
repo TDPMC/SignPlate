@@ -23,8 +23,10 @@ public class SignManager {
 
     public ConfigManager.SignTemplate getSelectedTemplate() {
         ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
-        if (config.selectedSignTemplate >= 0 && config.selectedSignTemplate < config.signTemplates.size()) {
-            return config.signTemplates.get(config.selectedSignTemplate);
+        int index = config.selectedSignTemplate;
+        
+        if (index >= 0 && index < config.signTemplates.size()) {
+            return config.signTemplates.get(index);
         }
         return null;
     }
@@ -34,7 +36,7 @@ public class SignManager {
         if (template == null) return;
 
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null || client.getNetworkHandler() == null) return;
+        if (client.getNetworkHandler() == null) return;
 
         // Send update packet to server
         client.getNetworkHandler().sendPacket(new UpdateSignC2SPacket(

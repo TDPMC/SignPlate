@@ -42,6 +42,10 @@ repositories {
         name = "DevAuth"
         url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
     }
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
 }
 
 dependencies {
@@ -52,6 +56,7 @@ dependencies {
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modRuntimeOnly "me.djtheredstoner:DevAuth-fabric:${project.devauth_version}"
+    modCompileOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 }
 
 sourceSets {

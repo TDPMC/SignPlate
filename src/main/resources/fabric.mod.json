@@ -4,8 +4,13 @@
   "version": "${version}",
   "name": "SignPlate",
   "description": "Sign Templates for Fabric",
-  "authors": [],
-  "contact": {},
+  "authors": [
+    "TheDemonPrince"
+  ],
+  "contact": {
+    "homepage": "https://github.com/TDPMC/SignPlate",
+    "issues": "https://github.com/TDPMC/SignPlate/issues"
+  },
   "license": "MIT",
   "icon": "assets/signplate/icon.png",
   "environment": "*",
@@ -15,6 +20,9 @@
     ],
     "main": [
       "dk.thedemonprince.Signplate"
+    ],
+    "modmenu": [
+      "dk.thedemonprince.client.integration.ModMenuIntegration"
     ]
   },
   "mixins": [
