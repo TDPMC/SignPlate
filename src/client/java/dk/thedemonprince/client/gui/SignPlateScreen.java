@@ -16,7 +16,6 @@ import java.util.List;
 
 public class SignPlateScreen extends Screen {
     private final Screen parent;
-    private TemplateListWidget templateList;
     private ConfigManager.SignTemplate editingTemplate = null;
     private int editingIndex = -1;
 
@@ -45,6 +44,7 @@ public class SignPlateScreen extends Screen {
             refresh();
         }).dimensions(centerX - 100, 10, 200, 20).build());
 
+        TemplateListWidget templateList;
         if (editingTemplate == null) {
             // List View - Dimensions: width, height, y, itemHeight
             // y=40 starts below the ON/OFF button
@@ -65,7 +65,6 @@ public class SignPlateScreen extends Screen {
                 if (this.client != null) this.client.setScreen(parent);
             }).dimensions(centerX - 100, height - 45, 200, 20).build());
         } else {
-            templateList = null;
             // Editor View Centered
             int startY = centerY - 90;
             nameField = new TextFieldWidget(textRenderer, centerX - 100, startY, 200, 20, Text.literal("Template Name"));
