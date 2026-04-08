@@ -56,9 +56,9 @@ public class ClientPlayerInteractionManagerMixin {
         Block block = state.getBlock();
 
         // Check for containers and blocks that definitely have GUIs/Interactions
-        if (block instanceof ChestBlock || block instanceof AbstractChestBlock || 
-            block instanceof AbstractFurnaceBlock || block instanceof ShulkerBoxBlock || block instanceof BarrelBlock ||
-            block instanceof HopperBlock || block instanceof DispenserBlock || block instanceof BrewingStandBlock) {
+        if (block instanceof AbstractChestBlock ||
+                block instanceof AbstractFurnaceBlock || block instanceof ShulkerBoxBlock || block instanceof BarrelBlock ||
+                block instanceof HopperBlock || block instanceof DispenserBlock || block instanceof BrewingStandBlock) {
             return true;
         }
 
@@ -76,10 +76,6 @@ public class ClientPlayerInteractionManagerMixin {
         }
 
         // Check for existing signs (to avoid opening the edit screen on servers)
-        if (block instanceof SignBlock || block instanceof HangingSignBlock) {
-            return true;
-        }
-
-        return false;
+        return block instanceof SignBlock || block instanceof HangingSignBlock;
     }
 }
