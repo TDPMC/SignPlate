@@ -16,7 +16,6 @@ import java.util.List;
 
 public class SignPlateScreen extends Screen {
     private final Screen parent;
-    private TemplateListWidget templateList;
     private ConfigManager.SignTemplate editingTemplate = null;
     private int editingIndex = -1;
 
@@ -45,6 +44,7 @@ public class SignPlateScreen extends Screen {
             refresh();
         }).dimensions(centerX - 100, 10, 200, 20).build());
 
+        TemplateListWidget templateList;
         if (editingTemplate == null) {
             // List View - Dimensions: width, height, y, itemHeight
             // y=40 starts below the ON/OFF button
@@ -53,6 +53,7 @@ public class SignPlateScreen extends Screen {
             int listHeight = height - 120; // leaves space for buttons at the bottom
             
             templateList = new TemplateListWidget(this.client, width, listHeight, listY, 25);
+            templateList.setDimensionsAndPosition(width, listHeight, 0, listY);
             addDrawableChild(templateList);
 
             addDrawableChild(ButtonWidget.builder(Text.literal("Create New Template"), button -> {
@@ -65,7 +66,6 @@ public class SignPlateScreen extends Screen {
                 if (this.client != null) this.client.setScreen(parent);
             }).dimensions(centerX - 100, height - 45, 200, 20).build());
         } else {
-            templateList = null;
             // Editor View Centered
             int startY = centerY - 90;
             nameField = new TextFieldWidget(textRenderer, centerX - 100, startY, 200, 20, Text.literal("Template Name"));
@@ -116,26 +116,27 @@ public class SignPlateScreen extends Screen {
     }
 
     private void refresh() {
-        this.clearAndInit();
+        this.clearChildren();
+        this.init();
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.render(context, mouseX, mouseY, delta);
+        int centerX = width / 2;
         if (editingTemplate != null) {
-            int centerX = width / 2;
             int centerY = height / 2;
             int startY = centerY - 90;
             int linesY = startY + 45;
             
-            context.drawTextWithShadow(textRenderer, Text.literal("Template Name:"), centerX - 100, startY - 12, 0xAAAAAA);
-            context.drawTextWithShadow(textRenderer, Text.literal("Lines (1-4):"), centerX - 100, linesY - 12, 0xAAAAAA);
+            context.drawTextWithShadow(textRenderer, Text.literal("Template Name:"), centerX - 100, startY - 12, 0xFFFFFFFF);
+            context.drawTextWithShadow(textRenderer, Text.literal("Lines (1-4):"), centerX - 100, linesY - 12, 0xFFFFFFFF);
         }
     }
 
     @Override
     public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderInGameBackground(context);
+        super.renderBackground(context, mouseX, mouseY, delta);
     }
 
     class TemplateListWidget extends ElementListWidget<TemplateEntry> {
@@ -149,6 +150,9 @@ public class SignPlateScreen extends Screen {
 
         @Override
         public int getRowWidth() { return 300; }
+        
+        @Override
+        public int getRowLeft() { return width / 2 - 150; }
         
         @Override
         protected int getScrollbarX() { return width / 2 + 155; }
@@ -191,12 +195,13 @@ public class SignPlateScreen extends Screen {
             ConfigManager.ConfigData config = ConfigManager.getInstance().getConfig();
             boolean isSelected = config.selectedSignTemplate == this.index;
             
-            context.drawTextWithShadow(textRenderer, (isSelected ? "● " : "○ ") + template.name, x + 5, y + 5, isSelected ? 0x55FF55 : 0xAAAAAA);
+            String prefix = isSelected ? "● " : "○ ";
+            context.drawTextWithShadow(textRenderer, Text.literal(prefix + template.name), x + 5, y + 5, isSelected ? 0xFF55FF55 : 0xFFAAAAAA);
 
-            int btnX = x + entryWidth - 120;
+            int btnX = x + entryWidth - 115;
             for (int i = 0; i < buttons.size(); i++) {
                 ClickableWidget btn = buttons.get(i);
-                btn.setX(btnX + (i == 0 ? 0 : (i == 1 ? 55 : 100)));
+                btn.setX(btnX + (i == 0 ? 0 : (i == 1 ? 52 : 95)));
                 btn.setY(y);
                 if (i == 0) btn.active = !isSelected;
                 btn.render(context, mouseX, mouseY, tickDelta);
