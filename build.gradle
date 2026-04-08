@@ -4,11 +4,19 @@ plugins {
     id 'idea'
 }
 
+base {
+    archivesName = project.archives_base_name
+}
+
 version = project.mod_version
 group = project.maven_group
 
-base {
-    archivesName = project.archives_base_name
+jar {
+    archiveFileName = "${project.archives_base_name}.jar"
+}
+
+remapJar {
+    archiveFileName = "${project.archives_base_name}.jar"
 }
 
 loom {

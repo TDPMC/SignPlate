@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class AbstractSignBlockMixin {
     @Inject(method = "openEditScreen", at = @At("HEAD"), cancellable = true)
     private void onOpenEditScreen(PlayerEntity player, SignBlockEntity signBlockEntity, boolean front, CallbackInfo ci) {
-        if (SignManager.getInstance().isSignPlateEnabled() && SignManager.getInstance().getSelectedTemplate() != null) {
+        if (signBlockEntity != null && SignManager.getInstance().isSignPlateEnabled() && SignManager.getInstance().getSelectedTemplate() != null) {
             SignManager.getInstance().applyTemplate(signBlockEntity.getPos(), front);
             ci.cancel();
         }

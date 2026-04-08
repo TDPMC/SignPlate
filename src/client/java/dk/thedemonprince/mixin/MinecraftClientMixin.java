@@ -14,10 +14,14 @@ public class MinecraftClientMixin {
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void onSetScreen(Screen screen, CallbackInfo ci) {
         if (screen instanceof AbstractSignEditScreen) {
-            if (SignManager.getInstance().isSignPlateEnabled() && SignManager.getInstance().getSelectedTemplate() != null) {
+            SignManager manager = SignManager.getInstance();
+            if (manager.isSignPlateEnabled() && manager.getSelectedTemplate() != null) {
                 AbstractSignEditScreenAccessor accessor = (AbstractSignEditScreenAccessor) screen;
-                SignManager.getInstance().applyTemplate(accessor.getBlockEntity().getPos(), accessor.isFront());
-                ci.cancel();
+                // SignBlockEntity is now accessed differently or might be null in some contexts
+                if (accessor.getBlockEntity() != null) {
+                    manager.applyTemplate(accessor.getBlockEntity().getPos(), accessor.isFront());
+                    ci.cancel();
+                }
             }
         }
     }

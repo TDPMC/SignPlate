@@ -40,10 +40,10 @@ public class SignManager {
         client.getNetworkHandler().sendPacket(new UpdateSignC2SPacket(
                 pos,
                 front,
-                template.line1,
-                template.line2,
-                template.line3,
-                template.line4
+                template.line1 == null ? "" : template.line1,
+                template.line2 == null ? "" : template.line2,
+                template.line3 == null ? "" : template.line3,
+                template.line4 == null ? "" : template.line4
         ));
     }
 }
