@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "signplate",
+  "version": "${version}",
+  "name": "SignPlate",
+  "description": "Sign Templates for Fabric",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/signplate/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "dk.thedemonprince.client.SignplateClient"
+    ],
+    "main": [
+      "dk.thedemonprince.Signplate"
+    ]
+  },
+  "mixins": [
+    "signplate.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": ">=1.20.6"
+  }
+}
